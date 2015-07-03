@@ -21,6 +21,7 @@ object Menus {
       "List".clusterRouteMenuItem(cluster),
       "Create".clusterRouteMenuItem(cluster)),
       None),
+    "Offset".clusterMenu(cluster),
     "Preferred Replica Election".clusterMenu(cluster),
     "Reassign Partitions".clusterMenu(cluster)
   )

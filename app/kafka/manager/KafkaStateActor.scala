@@ -14,6 +14,7 @@ import kafka.manager.utils.{TopicAndPartition, ZkUtils}
 
 import scala.collection.mutable
 import scala.util.{Success, Failure, Try}
+import scala.collection.JavaConversions._
 
 /**
  * @author hiral
@@ -26,6 +27,8 @@ class KafkaStateActor(curator: CuratorFramework,
                       clusterConfig: ClusterConfig) extends BaseQueryCommandActor {
 
   // e.g. /brokers/topics/analytics_content/partitions/0/state
+  private [this] val groupCache = new TreeCache(curator,ZkUtils.ConsumersPath)
+
   private[this] val topicsTreeCache = new TreeCache(curator,ZkUtils.BrokerTopicsPath)
 
   private[this] val topicsConfigPathCache = new PathChildrenCache(curator,ZkUtils.TopicConfigPath,true)
@@ -128,6 +131,7 @@ class KafkaStateActor(curator: CuratorFramework,
     topicsTreeCache.getListenable.addListener(topicsTreeCacheListener)
     log.info("Adding admin path cache listener...")
     adminPathCache.getListenable.addListener(adminPathCacheListener)
+    groupCache.start()
   }
 
   @scala.throws[Exception](classOf[Exception])
@@ -157,6 +161,7 @@ class KafkaStateActor(curator: CuratorFramework,
     Try(topicsConfigPathCache.close())
     log.info("Shutting down topics tree cache...")
     Try(topicsTreeCache.close())
+    Try(groupCache.close())
 
     super.postStop()
   }
@@ -176,6 +181,14 @@ class KafkaStateActor(curator: CuratorFramework,
       }
       config = getTopicConfigString(topic)
     } yield TopicDescription(topic, description, Option(states),config, deleteSupported)
+  }
+
+  def getGroups() = {
+    val groupPath = "%s".format(ZkUtils.ConsumersPath)
+    val groups  = groupCache.getCurrentChildren(groupPath)
+    val tmp = groups.keySet().toIndexedSeq
+    GroupList(tmp)
+//    val data = groupCache.getCurrentData(groupPath)
   }
 
   override def processActorResponse(response: ActorResponse): Unit = {
@@ -257,6 +270,9 @@ class KafkaStateActor(curator: CuratorFramework,
 
       case KSGetReassignPartition =>
         sender ! reassignPartitions
+
+      case KSGetGroups =>
+        sender ! getGroups
 
       case any: Any => log.warning("ksa : processQueryRequest : Received unknown message: {}", any.toString)
     }

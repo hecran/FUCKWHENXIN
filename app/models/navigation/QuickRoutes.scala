@@ -22,6 +22,7 @@ object QuickRoutes {
     "Update Cluster" -> controllers.routes.Cluster.updateCluster,
     "Summary" -> controllers.routes.Application.cluster,
     "Brokers" -> controllers.routes.Application.brokers,
+    "Offset" -> controllers.routes.Group.groups,
     "Topics" -> controllers.routes.Topic.topics,
     "List" -> controllers.routes.Topic.topics,
     "Create" -> controllers.routes.Topic.createTopic,

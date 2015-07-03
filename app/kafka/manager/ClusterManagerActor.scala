@@ -179,6 +179,14 @@ class ClusterManagerActor(cmConfig: ClusterManagerActorConfig)
         } yield tdO.map( td => CMTopicIdentity(Try(TopicIdentity.from(bl,td,tm,cmConfig.clusterConfig))))
         result pipeTo sender
 
+      case KSGetGroups =>
+        implicit val ec = context.dispatcher
+        val eventualGroupList = withKafkaStateActor(KSGetGroups)(identity[GroupList])
+        val result = for {
+          gl <- eventualGroupList
+        } yield CMGroupsView(gl.list.size, gl.list)
+        result pipeTo sender
+
       case any: Any => log.warning("cma : processQueryResponse : Received unknown message: {}", any)
     }
   }

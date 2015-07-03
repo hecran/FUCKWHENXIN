@@ -8,6 +8,7 @@
 # Home page
 GET         /                                             controllers.Application.index
 GET         /clusters/:c                                  controllers.Application.cluster(c:String)
+GET         /clusters/:c/groups                           controllers.Group.groups(c:String)
 GET         /clusters/:c/topics                           controllers.Topic.topics(c:String)
 GET         /clusters/:c/topics/:t                        controllers.Topic.topic(c:String, t:String)
 GET         /clusters/:c/brokers                          controllers.Application.brokers(c: String)

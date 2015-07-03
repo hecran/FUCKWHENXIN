@@ -1,0 +1,17 @@
+@*
+* Copyright 2015 Yahoo Inc. Licensed under the Apache License, Version 2.0
+* See accompanying LICENSE file.
+*@
+@import kafka.manager.ActorModel.BrokerIdentity
+@(cluster:String, groupList: kafka.manager.ActorModel.CMGroupsView)
+
+<table class="table">
+  <tbody>
+    @for(group <- groupList.list) {
+      <tr>
+        <td><a href="ref">@group</a></td>
+      </tr>
+    }
+  </tbody>
+</table>
+

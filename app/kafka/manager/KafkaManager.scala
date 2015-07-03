@@ -488,4 +488,14 @@ class KafkaManager(akkaConfig: Config)
       )
     )(identity[Option[ReassignPartitions]])
   }
+
+  def getGroupList(clusterName: String): Future[ApiError \/ CMGroupsView] = {
+    tryWithKafkaManagerActor(
+      KMClusterQueryRequest(
+        clusterName,
+        KSGetGroups
+      )
+    )(identity[CMGroupsView])
+  }
+
 }
