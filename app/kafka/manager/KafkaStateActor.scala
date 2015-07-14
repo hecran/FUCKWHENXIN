@@ -8,7 +8,6 @@ package kafka.manager
 import java.text.SimpleDateFormat
 
 import com.google.common.primitives.Longs
-import com.twitter.util.Time
 import kafka.api.{PartitionOffsetRequestInfo, OffsetRequest}
 import kafka.common.BrokerNotAvailableException
 import kafka.consumer.SimpleConsumer
@@ -198,7 +197,7 @@ class KafkaStateActor(curator: CuratorFramework,
         Option(topicsTreeCache.getCurrentData(statePath)).map(cd => (part, asString(cd.getData)))
       }
       config = getTopicConfigString(topic)
-    } yield TopicDescription(topic, description, Option(states), config, deleteSupported)
+    } yield TopicDescription(topic, description, Option(states.toMap), config, deleteSupported)
   }
 
   def getGroups() = {
@@ -235,7 +234,7 @@ class KafkaStateActor(curator: CuratorFramework,
       }
     } catch {
       case t: Throwable =>
-        error("Could not parse broker info", t)
+        log.error("Could not parse broker info", t)
         None
     }
   }
@@ -254,22 +253,23 @@ class KafkaStateActor(curator: CuratorFramework,
               val request =
                 OffsetRequest(immutable.Map(topicAndPartition -> PartitionOffsetRequestInfo(OffsetRequest.LatestTime, 1)))
               val logSize = consumer.getOffsetsBefore(request).partitionErrorAndOffsets(topicAndPartition).offsets.head
+              val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
               PartitionConsumerOffsetIdentity(pid,
                 offset.toLong,
                 logSize,
                 logSize - offset.toLong,
                 owner.get,
-                Time.fromMilliseconds(stat.getCtime).toString(),
-                Time.fromMilliseconds(stat.getMtime).toString())
+                sdf.format(stat.getCtime),
+                sdf.format(stat.getMtime))
           }
         case None =>
-          error("No broker for partition %s - %s".format(topic, pid))
+          log.error("No broker for partition %s - %s".format(topic, pid))
           None
       }
     } catch {
       case NonFatal(t) =>
-        error(s"Could not parse partition info. group: [$group] topic: [$topic]", t)
+        log.error(s"Could not parse partition info. group: [$group] topic: [$topic]", t)
         None
     }
   }
@@ -281,7 +281,10 @@ class KafkaStateActor(curator: CuratorFramework,
       pid <- partitions.sorted
       info <- processPartition(group, topic, pid)
     } yield info
-    TopicConsumerOffsetIdentity(topic, 0, 0, 0, list.toIndexedSeq)
+    val offset = list.foldLeft(0L)(_+_.offset)
+    val logSize = list.foldLeft(0L)(_+_.logSize)
+    val lag = list.foldLeft(0L)(_+_.lag)
+    TopicConsumerOffsetIdentity(topic, offset, logSize, lag, list.toIndexedSeq)
   }
 
   def getPartitionConsumerOffsetIdentity(topicPath: String, topic: String): TopicConsumerOffsetIdentity = {
@@ -419,7 +422,7 @@ class KafkaStateActor(curator: CuratorFramework,
           val m: Map[TopicAndPartition, Seq[Int]] = ReassignPartitionCommand.parsePartitionReassignmentZkData(json)
           reassignPartitions.fold {
             //nothing there, add as new
-            reassignPartitions = Some(ReassignPartitions(getDateTime(millis), m, None))
+            reassignPartitions = Some(ReassignPartitions(getDateTime(millis), m.toMap, None))
           } {
             existing =>
               existing.endTime.fold {
@@ -427,7 +430,7 @@ class KafkaStateActor(curator: CuratorFramework,
                 reassignPartitions = Some(existing.copy(partitionsToBeReassigned = existing.partitionsToBeReassigned ++ m))
               } { _ =>
                 //new op started
-                reassignPartitions = Some(ReassignPartitions(getDateTime(millis), m, None))
+                reassignPartitions = Some(ReassignPartitions(getDateTime(millis), m.toMap, None))
               }
           }
         }
