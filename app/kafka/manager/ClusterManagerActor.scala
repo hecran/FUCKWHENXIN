@@ -179,6 +179,14 @@ class ClusterManagerActor(cmConfig: ClusterManagerActorConfig)
         } yield tdO.map( td => CMTopicIdentity(Try(TopicIdentity.from(bl,td,tm,cmConfig.clusterConfig))))
         result pipeTo sender
 
+      case KSGetOffsets(clusterName, groupName) =>
+        implicit val ec = context.dispatcher
+        val eventualOffsetList = withKafkaStateActor(KSGetOffsets(clusterName, groupName))(identity[OffsetList])
+        val result = for {
+          osl <- eventualOffsetList
+        } yield CMOffsetsView(osl.list.size, osl.list)
+        result pipeTo sender
+
       case KSGetGroups =>
         implicit val ec = context.dispatcher
         val eventualGroupList = withKafkaStateActor(KSGetGroups)(identity[GroupList])
@@ -186,6 +194,7 @@ class ClusterManagerActor(cmConfig: ClusterManagerActorConfig)
           gl <- eventualGroupList
         } yield CMGroupsView(gl.list.size, gl.list)
         result pipeTo sender
+
 
       case any: Any => log.warning("cma : processQueryResponse : Received unknown message: {}", any)
     }

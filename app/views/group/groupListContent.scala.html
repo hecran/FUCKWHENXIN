@@ -9,7 +9,7 @@
   <tbody>
     @for(group <- groupList.list) {
       <tr>
-        <td><a href="ref">@group</a></td>
+        <td><a href="@routes.Offset.offsets(cluster, group)">@group</a></td>
       </tr>
     }
   </tbody>

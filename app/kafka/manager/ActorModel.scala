@@ -44,7 +44,6 @@ object ActorModel {
   }
   case class BVUpdateTopicMetricsForBroker(id: Int, metrics: IndexedSeq[(String,BrokerMetrics)]) extends CommandRequest
   case class BVUpdateBrokerMetrics(id: Int, metric: BrokerMetrics) extends CommandRequest
-  case class CMGroupsView(groupsCount: Int, list: IndexedSeq[String]) extends QueryResponse
   case object CMGetView extends QueryRequest
   case class CMGetTopicIdentity(topic: String) extends QueryRequest
   case class CMView(topicsCount: Int, brokersCount: Int, clusterConfig: ClusterConfig) extends QueryResponse
@@ -126,6 +125,11 @@ object ActorModel {
   case class KSGetBrokerState(id: String) extends  KSRequest
 
   case object KSGetGroups extends  QueryRequest
+  case class GroupList(list: IndexedSeq[String]) extends QueryResponse
+  case class CMGroupsView(groupsCount: Int, list: IndexedSeq[String]) extends QueryResponse
+  case class KSGetOffsets(cluster: String, group: String) extends  QueryRequest
+  case class OffsetList(list: IndexedSeq[TopicConsumerOffsetIdentity]) extends QueryResponse
+  case class CMOffsetsView(TopicsCount: Int, list: IndexedSeq[TopicConsumerOffsetIdentity]) extends QueryResponse
 
   case class TopicList(list: IndexedSeq[String], deleteSet: Set[String]) extends QueryResponse
   case class TopicConfig(topic: String, config: Option[(Int,String)]) extends QueryResponse
@@ -142,9 +146,11 @@ object ActorModel {
   case class PreferredReplicaElection(startTime: DateTime, topicAndPartition: Set[TopicAndPartition], endTime: Option[DateTime]) extends QueryResponse
   case class ReassignPartitions(startTime: DateTime, partitionsToBeReassigned: Map[TopicAndPartition, Seq[Int]], endTime: Option[DateTime]) extends QueryResponse
 
-  case class GroupList(list: IndexedSeq[String]) extends QueryResponse
-
   case object DCUpdateState extends CommandRequest
+
+  case class TopicConsumerOffsetIdentity(topic: String, offset: Long, logSize: Long, lag: Long, list: IndexedSeq[PartitionConsumerOffsetIdentity])
+
+  case class PartitionConsumerOffsetIdentity(partNum: Int, offset: Long, logSize: Long, lag: Long, owner: String, created: String, lastSeen: String)
 
   case class BrokerIdentity(id: Int, host: String, port: Int, jmxPort: Int)
 

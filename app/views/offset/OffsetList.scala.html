@@ -1,0 +1,22 @@
+@*
+* Copyright 2015 Yahoo Inc. Licensed under the Apache License, Version 2.0
+* See accompanying LICENSE file.
+*@
+@import scalaz.{\/}
+@(cluster:String, errorOrOffsets: kafka.manager.ApiError \/ kafka.manager.ActorModel.CMOffsetsView)
+
+@theMenu = {
+@views.html.navigation.clusterMenu(cluster,"Offset","",models.navigation.Menus.clusterMenus(cluster))
+}
+
+@main(
+  "Consumer Groups",
+  menu = theMenu,
+  breadcrumbs=views.html.navigation.breadCrumbs(models.navigation.BreadCrumbs.withViewAndCluster("Offset",cluster))) {
+  <div class="col-md-12">
+    <div class="panel panel-default">
+      <div class="panel-heading"><h3>Offset</h3></div>
+      @errorOrOffsets.fold( views.html.errors.onApiError(_), views.html.offset.OffsetListContent(cluster,_) )
+    </div>
+  </div>
+}

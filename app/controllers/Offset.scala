@@ -10,9 +10,9 @@ import play.api.mvc.{Controller, Action}
 object Offset extends Controller {
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   private[this] val kafkaManager = KafkaManagerContext.getKafkaManager
-  def groups(c: String) = Action.async {
-    kafkaManager.getGroupList(c).map { errorOrCMGroupsView =>
-      Ok(views.html.group.groupList(c,errorOrCMGroupsView))
+  def offsets(c: String, g: String) = Action.async {
+    kafkaManager.getOffsetList(c, g).map { CMOffsetsView =>
+      Ok(views.html.offset.OffsetList(c,CMOffsetsView))
     }
   }
 }

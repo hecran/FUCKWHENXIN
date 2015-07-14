@@ -1,0 +1,39 @@
+@*
+* Copyright 2015 Yahoo Inc. Licensed under the Apache License, Version 2.0
+* See accompanying LICENSE file.
+*@
+@import kafka.manager.ActorModel.BrokerIdentity
+@(cluster: String, offsetList: kafka.manager.ActorModel.CMOffsetsView)
+
+<table class="table">
+    <thead>
+        <tr><td>topic</td><td>partNum</td><td>offset</td><td>logSize</td><td>lag</td><td>owner</td><td>created</td><td>lastSeen</td></tr>
+    </thead>
+    <tbody>
+        @for(topicConsumerOffsetIdentity <- offsetList.list) {
+            <tr>
+                <td>@topicConsumerOffsetIdentity.topic</td>
+                <td></td>
+                <td>@topicConsumerOffsetIdentity.offset</td>
+                <td>@topicConsumerOffsetIdentity.logSize</td>
+                <td>@topicConsumerOffsetIdentity.lag</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            @for(partitionConsumerOffsetIdentity <- topicConsumerOffsetIdentity.list) {
+                <tr>
+                    <td></td>
+                    <td>@partitionConsumerOffsetIdentity.partNum</td>
+                    <td>@partitionConsumerOffsetIdentity.offset</td>
+                    <td>@partitionConsumerOffsetIdentity.logSize</td>
+                    <td>@partitionConsumerOffsetIdentity.lag</td>
+                    <td>@partitionConsumerOffsetIdentity.owner</td>
+                    <td>@partitionConsumerOffsetIdentity.created</td>
+                    <td>@partitionConsumerOffsetIdentity.lastSeen</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+

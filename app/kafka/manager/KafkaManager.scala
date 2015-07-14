@@ -498,4 +498,13 @@ class KafkaManager(akkaConfig: Config)
     )(identity[CMGroupsView])
   }
 
+  def getOffsetList(clusterName: String, groupName: String): Future[ApiError \/ CMOffsetsView] = {
+    tryWithKafkaManagerActor(
+      KMClusterQueryRequest(
+        clusterName,
+        KSGetOffsets(clusterName, groupName)
+      )
+    )(identity[CMOffsetsView])
+  }
+
 }
